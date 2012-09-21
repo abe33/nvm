@@ -12,8 +12,7 @@ begin
     if m
       op, version = m[1], m[2]
 
-      op = "==" if op == "="
-      op = "==" if op == '' || op.nil?
+      op = "==" if op == "=" || op == ''
 
       compatible_versions = available_versions.select do |v|
         eval "'#{v}' #{op} 'v#{version}'"
