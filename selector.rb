@@ -1,5 +1,4 @@
 
-# The Versio
 class Version
 
   attr_accessor :maj, :min, :build
