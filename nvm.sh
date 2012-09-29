@@ -257,6 +257,24 @@ nvm()
       fi
       return
     ;;
+    "select" )
+      if [ -e "$PWD/package.json" ]
+      then
+        current=$(nvm_version current)
+        version=$(nvm_ls | ruby $NVM_DIR/nvmrc.rb $PWD/package.json)
+        if [[ $version == *use* ]]
+        then
+          if [[ "nvm use $current" != $version ]]
+          then
+            $version
+          else
+            echo "Current version is already ${version:8}"
+          fi
+        else
+          echo $version
+        fi
+      fi
+    ;;
     "alias" )
       mkdir -p $NVM_DIR/alias
       if [ $# -le 2 ]; then
@@ -319,21 +337,3 @@ nvm()
 }
 
 nvm ls default >/dev/null 2>&1 && nvm use default >/dev/null
-
-cd (){
-  builtin cd $@
-  if [ -e "$PWD/package.json" ]
-  then
-    current=$(nvm_version current)
-    version=$(nvm_ls | ruby $NVM_DIR/nvmrc.rb $PWD/package.json)
-    if [[ $version == *use* ]]
-    then
-      if [[ "nvm use $current" != $version ]]
-      then
-        $version
-      fi
-    else
-      echo $version
-    fi
-  fi
-}
