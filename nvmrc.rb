@@ -1,32 +1,20 @@
 require 'rubygems'
 require 'json'
 
+require "#{File.dirname(__FILE__)}/selector"
+
 begin
   package = JSON.parse(File.read(ARGV.first))
   if package['engine'] && package['engine']['node']
     expected_version = package['engine']['node']
-    available_versions = STDIN.read.split("\n")
+    available_versions = STDIN.read.split("\n").map {|v| v.gsub('v', '')}
 
-    re = /^(>=|<=|=)*(\d+(\.\d+(\.\d+(-.*)*)*)*)/
-    m = re.match expected_version
-    if m
-      op, version = m[1], m[2]
-
-      op = "==" if op == "=" || op == ''
-
-      compatible_versions = available_versions.select do |v|
-        eval "'#{v}' #{op} 'v#{version}'"
-      end
-
-      if compatible_versions.empty?
-        print "No compatible version available"
-      else
-        preferred_version = compatible_versions.max
-
-        print "nvm use #{preferred_version}"
-      end
+    selector = VersionSelector.new available_versions
+    version = selector.match expected_version
+    if version
+      print "nvm use v#{version}"
     else
-      print "Invalid version expression"
+      print "No version found"
     end
   else
     print "package.json present but no engine specified"
