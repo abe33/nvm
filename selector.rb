@@ -159,11 +159,11 @@ end
 class OperatorDescriptor < VersionDescriptor
   class << self
     def with_operator (op)
-      re = %r{^#{op}#{VERSION_RE}$}
+      re = %r{^#{op}#{PARTIAL_VERSION_RE}$}
       self.when_match re do |version, availables, selector|
 
         availables.select { |v|
-          v.to_v.send(:"#{op}", version.to_v)
+          v.to_v.send(:"#{op}", version.to_v.fill_with_zero)
         }.last
       end
     end

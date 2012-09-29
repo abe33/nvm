@@ -114,6 +114,12 @@ class TestVersionSelector < Test::Unit::TestCase
     gt = @version_selector.match '>0.1.2'
     assert_equal '9999.9999.9999', gt
 
+    gt = @version_selector.match '>0.1'
+    assert_equal '9999.9999.9999', gt
+
+    gt = @version_selector.match '>0'
+    assert_equal '9999.9999.9999', gt
+
     gt = @version_selector.match '>9999.9999.9999'
     assert_nil gt
   end
@@ -121,11 +127,26 @@ class TestVersionSelector < Test::Unit::TestCase
   def test_greater_or_equal_version
     gte = @version_selector.match '>=0.1.2'
     assert_equal '9999.9999.9999', gte
+
+    gte = @version_selector.match '>=0.1'
+    assert_equal '9999.9999.9999', gte
+
+    gte = @version_selector.match '>=0'
+    assert_equal '9999.9999.9999', gte
+
+    gte = @version_selector.match '>=9999.9999.9999'
+    assert_equal '9999.9999.9999', gte
   end
 
   def test_lower_version
     lt = @version_selector.match '<0.1.2'
     assert_equal '0.1.1', lt
+
+    lt = @version_selector.match '<0.1'
+    assert_equal '0.0.5', lt
+
+    lt = @version_selector.match '<0'
+    assert_nil lt
 
     lt = @version_selector.match '<0.0.0'
     assert_nil lt
@@ -134,6 +155,12 @@ class TestVersionSelector < Test::Unit::TestCase
   def test_lower_or_equal
     lte = @version_selector.match '<=0.1.2'
     assert_equal '0.1.2', lte
+
+    lt = @version_selector.match '<=0.1'
+    assert_equal '0.1.0', lt
+
+    lt = @version_selector.match '<=0'
+    assert_equal '0000.0000.0000', lt
   end
 
   def test_any_version
