@@ -89,6 +89,7 @@ nvm()
       echo "    nvm install <version>       Download and install a <version>"
       echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>"
+      echo "    nvm select                  Modify PATH to use the version found in package.json"
       echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
       echo "    nvm ls                      List installed versions"
       echo "    nvm ls <version>            List versions matching a given description"
