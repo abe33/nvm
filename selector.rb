@@ -1,7 +1,8 @@
 
+# The Versio
 class Version
 
-  attr_reader :maj, :min, :build
+  attr_accessor :maj, :min, :build
   def initialize (v)
     @maj, @min, @build = v.split('.').map(&:to_i)
   end
@@ -15,8 +16,8 @@ class Version
   end
 
   def >= (v)
-    %w(maj min build).each do |p|
-      v1, v2 = self.send(:"#{p}"), v.send(:"#{p}")
+    [:maj, :min, :build].each do |p|
+      v1, v2 = self.send(p), v.send(p)
       return false if v1 < v2
       return true if v1 > v2
     end
@@ -24,8 +25,8 @@ class Version
   end
 
   def > (v)
-    %w(maj min).each do |p|
-      v1, v2 = self.send(:"#{p}"), v.send(:"#{p}")
+    [:maj, :min].each do |p|
+      v1, v2 = self.send(p), v.send(p)
       return false if v1 < v2
       return true if v1 > v2
     end
@@ -33,8 +34,8 @@ class Version
   end
 
   def <= (v)
-    %w(maj min build).each do |p|
-      v1, v2 = self.send(:"#{p}"), v.send(:"#{p}")
+    [:maj, :min, :build].each do |p|
+      v1, v2 = self.send(p), v.send(p)
       return false if v1 > v2
       return true if v1 < v2
     end
@@ -42,8 +43,8 @@ class Version
   end
 
   def < (v)
-    %w(maj min).each do |p|
-      v1, v2 = self.send(:"#{p}"), v.send(:"#{p}")
+    [:maj, :min].each do |p|
+      v1, v2 = self.send(p), v.send(p)
       return false if v1 > v2
       return true if v1 < v2
     end
@@ -60,8 +61,39 @@ class Version
     end
   end
 
+  def dup
+    self.class.parse self.to_s
+  end
+
+  def increment
+    [:build, :min, :maj].each do |p|
+      v = self.send(p)
+      if v
+        self.send(:"#{p.to_s}=", v + 1)
+        return self
+      end
+    end
+  end
+
+  def decrement
+    [:build, :min, :maj].each do |p|
+      v = self.send(p)
+      if v
+        self.send(:"#{p.to_s}=", v - 1)
+        return self
+      end
+    end
+  end
+
+  def fill_with_zero
+    self.maj = 0 if self.maj.nil?
+    self.min = 0 if self.min.nil?
+    self.build = 0 if self.build.nil?
+    self
+  end
+
   def to_s
-    "#{@maj}.#{@min}.#{@build}"
+    [@maj, @min, @build].compact.join '.'
   end
 end
 
@@ -99,6 +131,7 @@ class VersionDescriptor
 end
 
 VERSION_RE = '\\d+\\.\\d+\\.\\d+'
+PARTIAL_VERSION_RE = '\\d+(\\.(\\d+|x)(\\.x)*)*'
 
 # Simple formats
 
@@ -188,11 +221,34 @@ class AndRangeVersion < RangeDescriptor
   end
 end
 
-class OrOperator < RangeDescriptor
+class TildeRangeVersion < VersionDescriptor
+  when_match %r{^~#{PARTIAL_VERSION_RE}$} do |version, availables, selector|
+    version_min = ">=#{version.to_v.fill_with_zero}"
+    v = version.to_v
+    if v.build.nil?
+      v.build = nil
+      v.min = nil
+    else
+      v.build = nil
+    end
+    version_max = "<#{v.increment.fill_with_zero}"
+    selector.match "#{version_min} #{version_max}"
+  end
+end
+
+class OrOperator < VersionDescriptor
   when_match %r{\|\|} do |version, availables, selector|
     version.split('||').map {|e| selector.match e.strip}.compact.first
   end
 end
+
+class PartialVersion < VersionDescriptor
+  when_match %r{^#{PARTIAL_VERSION_RE}$} do |version, availables, selector|
+    version = version.to_v.to_s
+    availables.select {|v| v.index(version) == 0}.last
+  end
+end
+
 
 # Selector
 

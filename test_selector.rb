@@ -3,17 +3,17 @@ require 'test/unit'
 
 class TestVersion < Test::Unit::TestCase
   def test_equal_operator
-    @a = Version.new '0.1.2'
-    @b = Version.new '0.1.2'
+    @a = '0.1.2'.to_v
+    @b = '0.1.2'.to_v
 
     assert @a == @b
   end
 
   def test_greater_or_equal_operator
-    @a = Version.new '0.1.2'
-    @b = Version.new '0.1.2'
-    @c = Version.new '1.1.2'
-    @d = Version.new '0.0.5'
+    @a = '0.1.2'.to_v
+    @b = '0.1.2'.to_v
+    @c = '1.1.2'.to_v
+    @d = '0.0.5'.to_v
 
     assert (@a >= @b), "#{@a} < #{@b}"
     assert !(@a >= @c), "#{@a} < #{@c}"
@@ -21,10 +21,10 @@ class TestVersion < Test::Unit::TestCase
   end
 
   def test_greater_operator
-    @a = Version.new '0.1.2'
-    @b = Version.new '0.1.2'
-    @c = Version.new '1.1.2'
-    @d = Version.new '0.0.5'
+    @a = '0.1.2'.to_v
+    @b = '0.1.2'.to_v
+    @c = '1.1.2'.to_v
+    @d = '0.0.5'.to_v
 
     assert !(@a > @b), "#{@a} <= #{@b}"
     assert !(@a > @c), "#{@a} <= #{@c}"
@@ -32,10 +32,10 @@ class TestVersion < Test::Unit::TestCase
   end
 
   def test_lower_or_equal_operator
-    @a = Version.new '0.1.2'
-    @b = Version.new '0.1.2'
-    @c = Version.new '1.1.2'
-    @d = Version.new '0.0.5'
+    @a = '0.1.2'.to_v
+    @b = '0.1.2'.to_v
+    @c = '1.1.2'.to_v
+    @d = '0.0.5'.to_v
 
     assert (@a <= @b), "#{@a} > #{@b}"
     assert (@a <= @c), "#{@a} > #{@c}"
@@ -43,17 +43,45 @@ class TestVersion < Test::Unit::TestCase
   end
 
   def test_lower_operator
-    @a = Version.new '0.1.2'
-    @b = Version.new '0.1.2'
-    @c = Version.new '1.1.2'
-    @d = Version.new '0.0.5'
+    @a = '0.1.2'.to_v
+    @b = '0.1.2'.to_v
+    @c = '1.1.2'.to_v
+    @d = '0.0.5'.to_v
 
     assert !(@a < @b), "#{@a} >= #{@b}"
     assert (@a < @c), "#{@a} >= #{@c}"
     assert !(@a < @d), "#{@a} >= #{@d}"
   end
 
+  def test_increment
+    @a = '1'.to_v
+    @b = '1.1'.to_v
+    @c = '1.1.1'.to_v
 
+    assert_equal '2', @a.increment.to_s
+    assert_equal '1.2', @b.increment.to_s
+    assert_equal '1.1.2', @c.increment.to_s
+  end
+
+  def test_decrement
+    @a = '1'.to_v
+    @b = '1.1'.to_v
+    @c = '1.1.1'.to_v
+
+    assert_equal '0', @a.decrement.to_s
+    assert_equal '1.0', @b.decrement.to_s
+    assert_equal '1.1.0', @c.decrement.to_s
+  end
+
+  def test_fill_with_zero
+    @a = '1'.to_v
+    @b = '1.1'.to_v
+    @c = '1.1.1'.to_v
+
+    assert_equal '1.0.0', @a.fill_with_zero.to_s
+    assert_equal '1.1.0', @b.fill_with_zero.to_s
+    assert_equal '1.1.1', @c.fill_with_zero.to_s
+  end
 end
 
 class TestVersionSelector < Test::Unit::TestCase
@@ -68,6 +96,7 @@ class TestVersionSelector < Test::Unit::TestCase
       '1.0.0', '1.0.1', '1.0.2',
       '1.1.0', '1.1.1', '1.1.2',
       '1.2.0', '1.2.1', '1.2.2',
+      '2.0.0', '2.1.1', '2.2.2',
     ])
   end
 
@@ -130,7 +159,40 @@ class TestVersionSelector < Test::Unit::TestCase
   def test_or_version_range
     res = @version_selector.match '<1.0.0 || >1.1.1'
     assert_equal '0.2.3', res
+
+    res = @version_selector.match '>9999.9999.9999 || >1.1.1 <1.2.0'
+    assert_equal '1.1.2', res
   end
 
+  def test_partial_version
+    res = @version_selector.match '1'
+    assert_equal '1.2.2', res
+
+    res = @version_selector.match '1.1'
+    assert_equal '1.1.2', res
+
+    res = @version_selector.match '1.x'
+    assert_equal '1.2.2', res
+
+    res = @version_selector.match '1.1.x'
+    assert_equal '1.1.2', res
+
+    res = @version_selector.match '1.x.x'
+    assert_equal '1.2.2', res
+  end
+
+  def test_tilde_range_version
+    res = @version_selector.match '~1'
+    assert_equal '1.2.2', res
+
+    res = @version_selector.match '~1.1'
+    assert_equal '1.2.2', res
+
+    res = @version_selector.match '~1.0.1'
+    assert_equal '1.0.2', res
+
+    res = @version_selector.match '~9999.9999.9999'
+    assert_equal '9999.9999.9999', res
+  end
 
 end
